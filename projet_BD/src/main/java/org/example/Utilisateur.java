@@ -10,8 +10,8 @@ public class Utilisateur {
         while (r.next()) {
             System.out.println(
                     "email: " + r.getString(1) +
-                    "Nom: " + r.getString(2) +
-                    "adresse: " + r.getString(3));
+                    " Nom: " + r.getString(2) +
+                    " adresse: " + r.getString(3));
         }
         r.close();
     }
@@ -35,7 +35,7 @@ public class Utilisateur {
 
         assert connection != null;
 
-        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO ? VALUES (?, ?, ?, ?)");
+        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO UTILISATEUR VALUES (?, ?, ?, ?)");
         //preparedStatement.setString(1, this.utilisateur);
         preparedStatement.setString(1, email);
         preparedStatement.setString(2, nom);

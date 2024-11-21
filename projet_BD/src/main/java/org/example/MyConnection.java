@@ -10,9 +10,9 @@ public class MyConnection {
 //    public static final String USER = "azizih";     // A remplacer pour votre compte, sinon genere une exception
 //    public static final String PASSWD = "azizih";
 
-    public static final String CONN_URL = "jdbc:oracle:thin:@oracle1.ensimag.fr:1521:oracle1";
-    public static final String USER = "azizih";     // A remplacer pour votre compte, sinon genere une exception
-    public static final String PASSWD = "azizih";
+    public static final String CONN_URL = "jdbc:oracle:thin:@localhost:1521:XE";
+    public static final String USER = "system";     // A remplacer pour votre compte, sinon genere une exception
+    public static final String PASSWD = "1234";
 
 
     public void loadDriver(){
