@@ -1,13 +1,18 @@
 package org.example;
 
+import org.example.exceptions.CustomInputException;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public abstract class Vente {
 
     public int idVente;
     public int prixDepart;
+
+    public Boolean multipleOffreParPersonne; // Valeur M ou U
 
     public Boolean Revocabilite;
     public int qteLot;
@@ -19,17 +24,26 @@ public abstract class Vente {
 
     public VenteCategorie categorie;
 
+    public int prixDeRevient;
+
     public ArrayList<Offre> list_offres;
 
-    public Vente(int idVente, int prixDepart, Boolean revocabilite, int qteLot, int idSalleDeVente, int idProduit, LocalDateTime dateDepot) {
+    public Vente(int idVente, int prixDepart, Boolean revocabilite, String nbOffreParPersonne, int qteLot, int idSalleDeVente, int idProduit, LocalDateTime dateDepot) {
         this.idVente = idVente;
         this.prixDepart = prixDepart;
         this.Revocabilite = revocabilite;
+        this.multipleOffreParPersonne = (Objects.equals(nbOffreParPersonne, "M"));
         this.qteLot = qteLot;
         this.idSalleDeVente = idSalleDeVente;
         this.idProduit = idProduit;
         this.dateDepot = dateDepot;
         this.list_offres = new ArrayList<>();
+
+        try {
+            this.getInfoProduit();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static void printResult(ResultSet r) throws SQLException {
@@ -77,14 +91,16 @@ public abstract class Vente {
             Utility.closeConnection(connection, statement, resultSet);
             return null;
         }
+
         resultSet.next();
 
-        if ( Vente.estVenteMontante(idVente))
+        if ( Utility.estVenteMontante(idVente))
         {
             vente = new VenteMontante(
                     resultSet.getInt(1),   // idVente
                     resultSet.getInt(2),  // prix Depart
                     resultSet.getBoolean(3),
+                    resultSet.getString(4),
                     resultSet.getInt(5), // Qte lot
                     resultSet.getInt(6), // id salle de vente
                     resultSet.getInt(7),
@@ -95,6 +111,7 @@ public abstract class Vente {
                     resultSet.getInt(1),   // idVente
                     resultSet.getInt(2),  // prix Depart
                     resultSet.getBoolean(3),
+                    resultSet.getString(4), // multiple ou sing offre par personne
                     resultSet.getInt(5), // Qte lot
                     resultSet.getInt(6), // id salle de vente
                     resultSet.getInt(7),
@@ -108,25 +125,12 @@ public abstract class Vente {
         return vente;
     }
 
-    public static Boolean estVenteMontante(int idVente) throws SQLException {
+    public abstract void calculGagnant() throws SQLException;
 
-        Connection connection = MyConnection.getConnection();
 
-        Statement statement = connection.createStatement();
+    public abstract int getCurrentPrix() throws SQLException;
 
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM VENTEMONTANTE WHERE IDVENTE = " + idVente);
 
-        if(resultSet.isBeforeFirst()){
-
-            Utility.closeConnection(connection, statement, resultSet);
-            return Boolean.TRUE;
-        } else {
-
-            Utility.closeConnection(connection, statement, resultSet);
-            return Boolean.FALSE;
-        }
-
-    }
 
     public void chercheTousOffresParVente() throws SQLException {
         Connection connection = MyConnection.getConnection();
@@ -146,6 +150,33 @@ public abstract class Vente {
 
         statement.close();
         connection.close();
+
+    }
+
+
+
+    public void getInfoProduit() throws SQLException {
+        Connection connection = MyConnection.getConnection();
+
+        assert connection != null;
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM PRODUIT WHERE IDPRODUIT = (?)");
+
+        preparedStatement.setInt(1, idProduit);
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        // if no produit trouve
+        if (!resultSet.isBeforeFirst()){
+            throw new RuntimeException("Aucun Produit trouve pour cette Vente");
+        };
+
+        resultSet.next();
+
+        this.prixDeRevient = resultSet.getInt(3);
+
+        System.out.printf("Produit du vente: %s at prix de revient = %d , stock = %d \n", resultSet.getString(2), resultSet.getInt(3), resultSet.getInt(4));
+
+        Utility.closeConnection(connection, preparedStatement, resultSet);
 
     }
 
@@ -169,6 +200,8 @@ public abstract class Vente {
         }
         r.close();
     }
+
+    public abstract Boolean insertNewOffre(String email, int prixOffre, int qteAchat) throws SQLException, CustomInputException;
 
     @Override
     public String toString() {

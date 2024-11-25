@@ -1,5 +1,6 @@
 package org.example;
 
+import javax.swing.text.StyledEditorKit;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.Calendar;
@@ -25,6 +26,8 @@ public class Offre {
     public static Boolean insertNewOffre(int idVente, String email, int prixOffre, int qteAchat) throws SQLException {
         Connection connection = MyConnection.getConnection();
 
+        Boolean insertionSuccess = Boolean.FALSE;
+
         assert connection != null;
 
         LocalDateTime now = LocalDateTime.now();
@@ -39,7 +42,6 @@ public class Offre {
         if (res1 > 0) {
             System.out.printf("OFFRE INSERTION : Update Dateheure table with current date heure success \n");
         }
-
 
 //        Calendar cal = new GregorianCalendar(2020,5,12);
 //        java.sql.Date d = new Date(cal.getTime().getTime());
@@ -70,15 +72,20 @@ public class Offre {
 
         int res = preparedStatement.executeUpdate();
 
-        preparedStatement.close();
-        connection.close();
-
         if (res > 0) {
             System.out.printf("OFFRE INSERTION : Insertion new offer success");
-            return Boolean.TRUE;
         }
 
-        return Boolean.FALSE;
+
+        if (res1 > 0 && res > 0){
+            insertionSuccess = Boolean.TRUE;
+        }
+
+        preparedStatement.close();
+        updateDateStatement.close();
+        connection.close();
+
+        return insertionSuccess;
     }
 
     @Override

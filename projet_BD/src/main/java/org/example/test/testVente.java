@@ -10,6 +10,8 @@ public class testVente {
 //        Vente.chercheTousVentesParProduit(1);
 
         Vente v = Vente.chercheVenteParId(2);
-        v.chercheTousOffresParVente();
+        v.calculGagnant();
+        v.getCurrentPrix();
+        //v.chercheTousOffresParVente();
     }
 }
