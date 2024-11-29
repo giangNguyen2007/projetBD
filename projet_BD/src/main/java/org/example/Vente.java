@@ -4,6 +4,7 @@ import org.example.exceptions.CustomInputException;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -26,7 +27,14 @@ public abstract class Vente {
 
     public int prixDeRevient;
 
+    public String auteurProduit;
+
     public ArrayList<Offre> list_offres;
+    private String produitNom;
+    private int produitStock;
+
+    public int totalRevenu;
+    public int quteVendu;
 
     public Vente(int idVente, int prixDepart, Boolean revocabilite, String nbOffreParPersonne, int qteLot, int idSalleDeVente, int idProduit, LocalDateTime dateDepot) {
         this.idVente = idVente;
@@ -119,7 +127,7 @@ public abstract class Vente {
             );
         }
 
-        System.out.printf(" Vente found = %s \n", vente.toString());
+        //System.out.printf(" Vente found = %s \n", vente.toString());
 
         Utility.closeConnection(connection, statement, resultSet);
         return vente;
@@ -141,16 +149,39 @@ public abstract class Vente {
 
         assert(resultSet != null);
 
-        if (resultSet.isBeforeFirst()){
-            this.loadOffre(resultSet);
+//        if (resultSet.isBeforeFirst()){
+//            this.loadOffre(resultSet);
+//
+//        } else {
+//            System.out.printf("No Offre pour ce Vente actuellement \n");
+//        }
 
-        } else {
-            System.out.printf("No Offre pour ce Vente actuellement \n");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
+        while(resultSet.next()){
+            Timestamp date_offre = resultSet.getTimestamp(2);
+            LocalDateTime d = date_offre.toLocalDateTime();
+
+            System.out.printf("Offre %d : par %s pour %d euros/unite pour %d produits at date " + dtf.format(d) + "\n",
+                    resultSet.getInt(1),
+                    resultSet.getString(3),   // email
+                    resultSet.getInt(4),
+                    resultSet.getInt(5)
+                    );
+
         }
 
         statement.close();
         connection.close();
 
+    }
+
+    public void checkAuteur(String email) throws CustomInputException {
+        System.out.println(email);
+        System.out.println(this.auteurProduit);
+        if (!Objects.equals(email, this.auteurProduit)){
+            throw new CustomInputException("Vous n'est pas le depositeur de cette vente.");
+        }
     }
 
 
@@ -173,6 +204,9 @@ public abstract class Vente {
         resultSet.next();
 
         this.prixDeRevient = resultSet.getInt(3);
+        this.auteurProduit = resultSet.getString(5);
+        this.produitNom = resultSet.getString(2);
+        this.produitStock = resultSet.getInt(4);
 
         System.out.printf("Produit du vente: %s at prix de revient = %d , stock = %d \n", resultSet.getString(2), resultSet.getInt(3), resultSet.getInt(4));
 
@@ -208,12 +242,40 @@ public abstract class Vente {
         return "Vente{" +
                 "idVente=" + idVente +
                 ", prixDepart=" + prixDepart +
+                ", multipleOffreParPersonne=" + multipleOffreParPersonne +
                 ", Revocabilite=" + Revocabilite +
                 ", qteLot=" + qteLot +
-                ", idSalleDeVente=" + idSalleDeVente +
+                ", SalleDe Nb=" + idSalleDeVente +
                 ", idProduit=" + idProduit +
                 ", dateDepot=" + dateDepot +
                 ", categorie=" + categorie +
+                ", prixDeRevient=" + prixDeRevient +
+                ", auteurProduit='" + auteurProduit + '\'' +
+                ", produitNom='" + produitNom + '\'' +
+                ", produitStock=" + produitStock +
                 '}';
     }
+
+
+    public String printPublic() {
+        return "Vente id" + idVente +
+                ": SalleDe Nb=" + idSalleDeVente +
+                ", prixDepart=" + prixDepart +
+
+                ", qteLot=" + qteLot +
+
+                ", dateDepot=" + dateDepot +
+                ", categorie=" + categorie +
+                ", par ='" + auteurProduit ;
+    }
+
+
+    public String printProduit() {
+        return "Produit : " +
+                 produitNom + '\'' +
+                ", total Stock =" + produitStock +
+                '}';
+    }
+
+
 }

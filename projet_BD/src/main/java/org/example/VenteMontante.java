@@ -97,13 +97,13 @@ public class VenteMontante extends Vente{
         };
 
         int nbGagnant = 0;
-        int totalVente = 0;
-        int totalQte = 0;
+        this.totalRevenu = 0;
+        this.quteVendu = 0;
 
         while(resultSet.next()){
-            if (totalQte + resultSet.getInt(3) <= this.qteLot){
-                totalVente += resultSet.getInt(2);
-                totalQte+= resultSet.getInt(3);
+            if (this.quteVendu + resultSet.getInt(3) <= this.qteLot){
+                this.totalRevenu += resultSet.getInt(2);
+                this.quteVendu += resultSet.getInt(3);
                 nbGagnant++;
                 System.out.printf("Le gagnant No%d est %s avec offre total de %d pour %d produits \n", nbGagnant, resultSet.getString(1), resultSet.getInt(2), resultSet.getInt(3));
             } else {
@@ -113,9 +113,9 @@ public class VenteMontante extends Vente{
         }
 
         // calculate profit / loss
-        int totalProfit = totalVente - this.prixDeRevient * totalQte;
+        int totalProfit = this.totalRevenu - this.prixDeRevient * this.quteVendu;
 
-        System.out.printf(" ====> BILAN : Le profit / perte du vente est %d sur %d produit \n", totalProfit, totalQte);
+        System.out.printf(" ====> BILAN : Le profit / perte du vente est %d sur %d produit \n", totalProfit, this.quteVendu);
 
         Utility.closeConnection(connection, preparedStatement, resultSet);
     }

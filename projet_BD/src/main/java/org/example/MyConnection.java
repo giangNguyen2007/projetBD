@@ -30,7 +30,7 @@ public class MyConnection {
 
             Connection connection = DriverManager.getConnection(CONN_URL, USER, PASSWD);
 
-            System.out.printf("Connection sucessful!");
+            //System.out.printf("Connection sucessful!");
 
             return connection;
 
