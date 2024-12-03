@@ -1,0 +1,30 @@
+
+johndoe@gmail.com
+
+changer_email
+
+
+afficher_mes_produits (no argument)
+
+creer_categorie Games jeux_video_toute_categorie
+
+afficher_salles
+
+creer_salle <nom_categorie>
+
+nouveau_produit playstation 300 40 Games
+
+mettre_produit_en_vente 23 200 10 4 Y M montante
+<idproduit> <prixDepart> <qteLot> <numeroSalle>
+
+
+afficher_ventes_pour_produit 1
+
+afficher_offres_par_vente 42
+
+calculer_resultat_vente 42
+
+changer_email paulmartin@hotmail.com
+ changer_email johndoe@gmail.com
+
+afficher_toutes_ventes
