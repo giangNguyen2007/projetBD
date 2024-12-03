@@ -84,7 +84,7 @@ public class VenteDescendante extends Vente{
             throw new RuntimeException("Montant de la reduction par minute doit etre positive");
         }
 
-        Utility.closeConnection(connection, preparedStatement, resultSet);
+        Utility.commitAndCloseConnection(connection, preparedStatement, resultSet);
         return res;
     }
 
@@ -96,7 +96,6 @@ public class VenteDescendante extends Vente{
         // print results
         System.out.printf("Number of minutes from depot : %d \n", interval);
         System.out.println("Date de depot = : " + this.dateDepot);
-
 
 
         int currentPrice = this.prixDepart - (int)interval * reductionPerMinute;

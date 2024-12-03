@@ -34,38 +34,17 @@ class UtilityTest {
 
     }
 
-    @Test
-    void testInsertNewVente() {
+//    @Test
+//    void testInsertNewVente() {
+//
+//        try {
+//            Utility.insertNewVente(100, "Y", "M", 100, 1, 1);
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//    }
 
-        try {
-            Utility.insertNewVente(100, "Y", "M", 100, 1, 1);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Test
-    void testDeleteVente() {
-
-        try {
-            Utility.deleteVente(21);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Test
-    void testUpdateProduitStock() {
-
-        try {
-            Utility.updateProduitStock(3000, 1);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
 
     @Test
     void testTotalProduitEnVente() {

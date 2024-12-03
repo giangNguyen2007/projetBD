@@ -30,6 +30,8 @@ public class MyConnection {
 
             Connection connection = DriverManager.getConnection(CONN_URL, USER, PASSWD);
 
+            connection.setAutoCommit(Boolean.FALSE);
+
             //System.out.printf("Connection sucessful!");
 
             return connection;

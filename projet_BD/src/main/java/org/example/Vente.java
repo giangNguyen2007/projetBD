@@ -31,7 +31,7 @@ public abstract class Vente {
 
     public ArrayList<Offre> list_offres;
     private String produitNom;
-    private int produitStock;
+    public int produitStock;
 
     public int totalRevenu;
     public int quteVendu;
@@ -72,10 +72,19 @@ public abstract class Vente {
 
         Statement statement = connection.createStatement();
 
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM VENTE WHERE IDPRODUIT = " + idProduit);
+        ResultSet resultSet = statement.executeQuery("SELECT IDVENTE FROM VENTE WHERE IDPRODUIT = " + idProduit);
 
         assert(resultSet != null);
-        Vente.printResult(resultSet);
+
+        int idVente;
+        Vente v;
+
+        while (resultSet.next()){
+            idVente = resultSet.getInt(1);
+            v = Vente.chercheVenteParId(idVente);
+            System.out.println(v.toString());
+        }
+
 
         statement.close();
         connection.close();
@@ -96,7 +105,7 @@ public abstract class Vente {
 
         if (!resultSet.isBeforeFirst()){
             System.out.printf("No vente trouve avec id correspondant");
-            Utility.closeConnection(connection, statement, resultSet);
+            Utility.commitAndCloseConnection(connection, statement, resultSet);
             return null;
         }
 
@@ -129,7 +138,7 @@ public abstract class Vente {
 
         //System.out.printf(" Vente found = %s \n", vente.toString());
 
-        Utility.closeConnection(connection, statement, resultSet);
+        Utility.commitAndCloseConnection(connection, statement, resultSet);
         return vente;
     }
 
@@ -143,9 +152,14 @@ public abstract class Vente {
     public void chercheTousOffresParVente() throws SQLException {
         Connection connection = MyConnection.getConnection();
 
-        Statement statement = connection.createStatement();
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT * FROM OFFRE WHERE IDVENTE = (?) ORDER BY DATEHEURE"
+        );
 
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM OFFRE WHERE IDVENTE = " + this.idVente);
+        preparedStatement.setInt(1, this.idVente);
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
 
         assert(resultSet != null);
 
@@ -171,18 +185,13 @@ public abstract class Vente {
 
         }
 
-        statement.close();
+        resultSet.close();
+        preparedStatement.close();
         connection.close();
 
     }
 
-    public void checkAuteur(String email) throws CustomInputException {
-        System.out.println(email);
-        System.out.println(this.auteurProduit);
-        if (!Objects.equals(email, this.auteurProduit)){
-            throw new CustomInputException("Vous n'est pas le depositeur de cette vente.");
-        }
-    }
+
 
 
 
@@ -208,9 +217,9 @@ public abstract class Vente {
         this.produitNom = resultSet.getString(2);
         this.produitStock = resultSet.getInt(4);
 
-        System.out.printf("Produit du vente: %s at prix de revient = %d , stock = %d \n", resultSet.getString(2), resultSet.getInt(3), resultSet.getInt(4));
+        //System.out.printf("Produit du vente: %s at prix de revient = %d , stock = %d \n", resultSet.getString(2), resultSet.getInt(3), resultSet.getInt(4));
 
-        Utility.closeConnection(connection, preparedStatement, resultSet);
+        Utility.commitAndCloseConnection(connection, preparedStatement, resultSet);
 
     }
 
@@ -239,34 +248,42 @@ public abstract class Vente {
 
     @Override
     public String toString() {
-        return "Vente{" +
-                "idVente=" + idVente +
-                ", prixDepart=" + prixDepart +
-                ", multipleOffreParPersonne=" + multipleOffreParPersonne +
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
+        return "(+)  Vente numero " + idVente +
+                ": SalleDe Nb" + idSalleDeVente +
+                ", produit :" + produitNom +
+                ", prix de Revient =" + prixDeRevient +
+                ", prix de Depart =" + prixDepart +
+
+                ", quantite du lot : " + qteLot +
+
+                ", categorie :" + categorie +
+
                 ", Revocabilite=" + Revocabilite +
-                ", qteLot=" + qteLot +
-                ", SalleDe Nb=" + idSalleDeVente +
-                ", idProduit=" + idProduit +
-                ", dateDepot=" + dateDepot +
-                ", categorie=" + categorie +
-                ", prixDeRevient=" + prixDeRevient +
-                ", auteurProduit='" + auteurProduit + '\'' +
-                ", produitNom='" + produitNom + '\'' +
-                ", produitStock=" + produitStock +
-                '}';
+
+                ", date de depot " + dateDepot.format(dtf) ;
+
     }
 
 
     public String printPublic() {
-        return "Vente id" + idVente +
-                ": SalleDe Nb=" + idSalleDeVente +
-                ", prixDepart=" + prixDepart +
 
-                ", qteLot=" + qteLot +
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
-                ", dateDepot=" + dateDepot +
-                ", categorie=" + categorie +
-                ", par ='" + auteurProduit ;
+        return "(+)  Vente numero " + idVente +
+                ": SalleDe Nb" + idSalleDeVente +
+                ", produit :" + produitNom +
+                ", prixDepart =" + prixDepart +
+
+                ", quantite du lot : " + qteLot +
+
+                ", categorie :" + categorie +
+
+                ", date de depot " + dateDepot.format(dtf) +
+
+                ", par " + auteurProduit ;
     }
 
 

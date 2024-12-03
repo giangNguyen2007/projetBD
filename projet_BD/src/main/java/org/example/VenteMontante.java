@@ -4,6 +4,8 @@ import org.example.exceptions.CustomInputException;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Scanner;
 
 public class VenteMontante extends Vente{
 
@@ -36,10 +38,6 @@ public class VenteMontante extends Vente{
 
         int max = res1.getInt(1);
 
-        if (true) {
-            System.out.printf("Currnet Max Price = : %d \n", max);
-        }
-
         return max;
     }
 
@@ -50,11 +48,6 @@ public class VenteMontante extends Vente{
 
         if (!this.multipleOffreParPersonne && Utility.findNbOffreOfUser(idVente, email) > 0){
             throw new CustomInputException("Vente autorise une seule offre par utilisateur. Vous avez deja soumis une l'offre");
-        }
-
-        // check prix
-        if (prixOffre <= this.currentPrixMax){
-            throw new CustomInputException("Nouvelle offre doit avoit proposer un prix superieur a ceux des anciens offres");
         }
 
         int totalCurrentQtyAchat = 0;
@@ -78,47 +71,69 @@ public class VenteMontante extends Vente{
 
     public void calculGagnant() throws SQLException {
         Connection connection = MyConnection.getConnection();
+        try {
 
-        assert connection != null;
-        PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT EMAIL, SUM (QUANTITEACHAT * PRIXOFFRE) AS TOTAL, SUM (QUANTITEACHAT)  " +
-                "FROM OFFRE WHERE IDVENTE = ? " +
-                "GROUP BY EMAIL " +
-                "ORDER BY TOTAL DESC"
-        );
 
-        preparedStatement.setInt(1, idProduit);
+            assert connection != null;
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "SELECT EMAIL, SUM (QUANTITEACHAT * PRIXOFFRE) AS TOTAL, SUM (QUANTITEACHAT)  " +
+                            "FROM OFFRE WHERE IDVENTE = ? " +
+                            "GROUP BY EMAIL " +
+                            "ORDER BY TOTAL DESC"
+            );
 
-        ResultSet resultSet = preparedStatement.executeQuery();
+            preparedStatement.setInt(1, idVente);
 
-        // if no produit trouve
-        if (!resultSet.isBeforeFirst()){
-            throw new RuntimeException("Pas d'offre pour Vente");
-        };
+            ResultSet resultSet = preparedStatement.executeQuery();
 
-        int nbGagnant = 0;
-        this.totalRevenu = 0;
-        this.quteVendu = 0;
+            // if no produit trouve
+            if (!resultSet.isBeforeFirst()) {
+                throw new RuntimeException("Pas d'offre pour Vente");
+            }
+            ;
 
-        while(resultSet.next()){
-            if (this.quteVendu + resultSet.getInt(3) <= this.qteLot){
-                this.totalRevenu += resultSet.getInt(2);
-                this.quteVendu += resultSet.getInt(3);
-                nbGagnant++;
-                System.out.printf("Le gagnant No%d est %s avec offre total de %d pour %d produits \n", nbGagnant, resultSet.getString(1), resultSet.getInt(2), resultSet.getInt(3));
-            } else {
-                break;
+            int nbGagnant = 0;
+            this.totalRevenu = 0;
+            this.quteVendu = 0;
+
+            while (resultSet.next()) {
+                if (this.quteVendu + resultSet.getInt(3) <= this.qteLot) {
+                    this.totalRevenu += resultSet.getInt(2);
+                    this.quteVendu += resultSet.getInt(3);
+                    nbGagnant++;
+                    System.out.printf("Le gagnant No%d est %s avec offre total de %d pour %d produits \n", nbGagnant, resultSet.getString(1), resultSet.getInt(2), resultSet.getInt(3));
+                } else {
+                    break;
+                }
+
             }
 
+            // calculate profit / loss
+            int totalProfit = this.totalRevenu - this.prixDeRevient * this.quteVendu;
+
+            System.out.printf(" ====> BILAN : Le profit / perte actuelle du vente est %d sur %d produit \n", totalProfit, this.quteVendu);
+
+            // DEMANDE USER ACTION
+            Scanner scanner = new Scanner(System.in);
+
+            // Prompt the user for input
+            System.out.print("Valider les offres et terminer la vente (Y/N): ");
+            String user_choix = scanner.nextLine();
+
+            if (Objects.equals(user_choix, "Y")) {
+
+                Utility.deleteVente(connection, idVente);
+                Utility.updateProduitStock(connection, this.produitStock - this.quteVendu, idProduit);
+            }
+
+            Utility.commitAndCloseConnection(connection, preparedStatement, resultSet);
+
+        } catch (SQLException e) {
+            System.out.printf(e.getMessage());
         }
 
-        // calculate profit / loss
-        int totalProfit = this.totalRevenu - this.prixDeRevient * this.quteVendu;
-
-        System.out.printf(" ====> BILAN : Le profit / perte du vente est %d sur %d produit \n", totalProfit, this.quteVendu);
-
-        Utility.closeConnection(connection, preparedStatement, resultSet);
     }
+
 
     @Override
     public int getCurrentPrix() throws SQLException {
@@ -128,17 +143,7 @@ public class VenteMontante extends Vente{
 
 
     @Override
-    public String toString() {
-        return "VenteMontante{" +
-                "currentPrixMax=" + currentPrixMax +
-                ", idVente=" + idVente +
-                ", prixDepart=" + prixDepart +
-                ", Revocabilite=" + Revocabilite +
-                ", qteLot=" + qteLot +
-                ", idSalleDeVente=" + idSalleDeVente +
-                ", idProduit=" + idProduit +
-                ", dateDepot=" + dateDepot +
-                ", categorie=" + categorie +
-                '}';
+    public String printPublic() {
+        return super.printPublic() + " \n Vente en cours, prix max actuel = " + this.currentPrixMax;
     }
 }

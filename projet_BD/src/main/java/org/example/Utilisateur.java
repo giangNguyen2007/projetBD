@@ -30,6 +30,8 @@ public class Utilisateur {
 
     }
 
+
+
     public void insertUtilisateur(String email, String nom, String prenom, String addresse) throws SQLException {
         Connection connection = MyConnection.getConnection();
 
